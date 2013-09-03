@@ -1,0 +1,46 @@
+#./libFM -task r -train  -dim '1,1,8' -iter 50 -method mcmc -init_stdev 0.1  -regular r2 -out libfOUT
+
+./libFM -task r -train ml1m-train.libfm -test ml1m-test.libfm -dim '1,1,20' -iter 100 -method als -regular '1,1,10' -init_stdev 0.1 --meta libfm.grp.data
+
+submit 0
+./libFM -task r -train rating.data.train.libfm -test rating.data.train.libfm -dim '1,1,20'  -init_stdev 0.1  -method als -out out.lifm -regular '1,1,1'
+#Iter= 99	Train=0.199703	Test=0.205775
+./libFM -task r -train rating.data.train.libfm -test rating.data.test.libfm -dim '1,1,20'  -init_stdev 0.1  -method als -out out.lifm -regular '1,1,1'
+#Iter= 99	Train=0.198842	Test=0.566509
+
+
+submit 1 cat features
+./libFM -task r -train rating.data.train.libfm -test rating.data.test.libfm -dim '1,1,20'  -init_stdev 0.1 -meta  libfm.grp.data -method als -out out.lifm -regular '1,1,1'
+
+submit 2 #with more features as default  '' and same as submit 1
+	./libFM -task r -train rating.data.train.libfm -test rating.data.test.libfm -dim '1,1,20'  -init_stdev 0.1 -meta  libfm.grp.data -method als -out out.lifm -regular '1,1,1'
+	train vs train 
+	./libFM -task r -train rating.data.train.libfm -test rating.data.train.libfm -dim '1,1,20'  -init_stdev 0.1 -meta  libfm.grp.data -method als -out out.lifm -regular '1,1,1'
+	#Iter= 99	Train=0.219539	Test=0.21615
+	final 
+	#Iter= 99	Train=0.218904	Test=1.39325
+	
+	
+submit 3 #with more features as avg business stars and same as submit 2
+test rating 3.5
+./libFM -task r -train rating.data.train.libfm -test rating.data.train.libfm -dim '1,1,20'  -init_stdev 0.1 -meta  libfm.grp.data -method als -out out.lifm -regular '1,1,1'
+	#Iter= 99	Train=0.21528	Test=0.214959
+./libFM -task r -train rating.data.train.libfm -test rating.data.test.libfm -dim '1,1,20'  -init_stdev 0.1 -meta  libfm.grp.data -method als -out out.lifm -regular '1,1,1'
+	with rating 3.5
+	#Iter= 99	Train=0.214093	Test=0.775329
+	with rating 5 
+	#Iter= 99	Train=0.211475	Test=1.46096
+	
+submit 4 #with more features as avg user rating and same as submit 3
+	Train vs Train 
+./libFM -task r -train rating.data.train.libfm -test rating.data.train.libfm -dim '1,1,20'  -init_stdev 0.1 -meta  libfm.grp.data -method als -out out.lifm -regular '1,1,1'
+	#Iter= 99	Train=0.201103	Test=0.205434
+./libFM -task r -train rating.data.train.libfm -test rating.data.test.libfm -dim '1,1,20'  -init_stdev 0.1 -meta  libfm.grp.data -method als -out out.lifm -regular '1,1,1'
+	with rating 3.5
+	#Iter= 99	Train=0.201055	Test=0.809688
+	
+submit 5 no cat feaures, but avg user, busin and review count
+	Train vs Train	
+
+./libFM -task r -train rating.data.train.libfm -test rating.data.train.libfm -dim '1,1,8'  -init_stdev 0.1 -meta  libfm.grp.data -method als -out out.lifm -regular '10,10,10' -iter 100
+	

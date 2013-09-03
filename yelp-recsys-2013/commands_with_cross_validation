@@ -1,0 +1,77 @@
+./libFM -task r -train rating.data_train_1 -test rating.data_valid_1 -dim '1,1,50' -iter 100 -method mcmc  -init_stdev 0.01 -verbosity 2
+#Iter= 99	Train=1.02809	Test=1.17493
+./libFM -task r -train rating.data_train_2 -test rating.data_valid_2 -dim '1,1,50' -iter 100 -method mcmc  -init_stdev 0.01 -verbosity 2
+#Iter= 99	Train=1.02845	Test=1.17659
+./libFM -task r -train rating.data_train_3 -test rating.data_valid_3 -dim '1,1,50' -iter 100 -method mcmc  -init_stdev 0.01 -verbosity 2
+#Iter= 99	Train=1.02403	Test=1.17243
+./libFM -task r -train rating.data_train_4 -test rating.data_valid_4 -dim '1,1,50' -iter 100 -method mcmc  -init_stdev 0.01 -verbosity 2
+#Iter= 99	Train=1.02106	Test=1.17316
+./libFM -task r -train rating.data_train_5 -test rating.data_valid_5 -dim '1,1,50' -iter 100 -method mcmc  -init_stdev 0.01 -verbosity 2
+#Iter= 99	Train=1.0352	Test=1.17499
+
+
+
+5 cross
+[] kapild@~/install/libfm-1.40.src/bin: ./libFM -task r -train rating.data.libfm_train_1 -test rating.data.libfm_valid_1 -dim '1,1,50' -iter 100 -method mcmc  -init_stdev 0.01 -verbosity 2
+#Iter= 99	Train=1.092	Test=1.19102
+./libFM -task r -train rating.data.libfm_train_2 -test rating.data.libfm_valid_2 -dim '1,1,50' -iter 100 -method mcmc  -init_stdev 0.01 -verbosity 2
+#Iter= 99	Train=1.08274	Test=1.19007
+
+
+
+with st 0.1
+./libFM -task r -train rating.data.libfm_train_2 -test rating.data.libfm_valid_2 -dim '1,1,50' -iter 100 -method mcmc  -init_stdev 0.1 -verbosity 2
+#Iter= 99	Train=1.00882	Test=1.1106
+with train_3
+#Iter= 99	Train=1.01053	Test=1.10925
+train vs train whole
+
+[] kapild@~/install/libfm-1.40.src/bin: ./libFM -task r -train ../scripts/rating.data.train.libfm -test ../scripts/rating.data.train.libfm -dim '1,1,50' -iter 100 -method mcmc  -init_stdev 0.1 -verbosity 2
+#Iter= 99	Train=1.01077	Test=0.978869
+train vs test
+#Iter= 99	Train=1.01021	Test=0.446271
+
+
+
+with st 0.1 and dime 75
+./libFM -task r -train rating.data.libfm_train_2 -test rating.data.libfm_valid_2 -dim '1,1,75' -iter 100 -method mcmc  -init_stdev 0.1 -verbosity 2
+
+with st 0.1 and dime 200
+./libFM -task r -train rating.data.libfm_train_2 -test rating.data.libfm_valid_2 -dim '1,1,200' -iter 100 -method mcmc  -init_stdev 0.1 -verbosity 2
+too slow
+
+
+
+
+./libFM -task r -train rating.data.train.libfm -test rating.data.test.libfm -dim '1,1,10' -iter 100 -method mcmc  -init_stdev 0.01 -verbosity 2 -out submit.val -meta libfm.grp.data
+
+
+
+
+
+
+
+
+
+
+Method mcmc
+
+with no grouping NAN regularization 
+./libFM -task r -train rating.data.train.libfm -test rating.data.test.libfm -dim '1,1,100' -iter 100 -method mcmc  -init_stdev 0.001 -verbosity 2 -out out.mcmc.dim_100.ite_100.no_grp.no_reg -rlog log.mcmc.dim_100.ite_100.no_grp.no_reg
+
+with grouping NAN regularization 
+./libFM -task r -train rating.data.train.libfm -test rating.data.test.libfm -dim '1,1,100' -iter 100 -method mcmc  -init_stdev 0.001 -verbosity 2 -meta rating.data.train.libfm.grp -out out.mcmc.dim_100.ite_100.yes_grp.no_reg -rlog log.mcmc.dim_100.ite_100.yes_grp.no_reg
+
+
+
+als
+with no grouping no regularization 
+./libFM -task r -train rating.data.train.libfm -test rating.data.test.libfm -dim '1,1,100' -iter 100 -method als  -init_stdev 0.001 -verbosity 2 -out out.als.dim_100.ite_100.no_grp.no_reg -rlog log.als.dim_100.ite_100.no_grp.no_reg
+with grouping no regularization 
+./libFM -task r -train rating.data.train.libfm -test rating.data.test.libfm -dim '1,1,100' -iter 100 -method als  -init_stdev 0.001 -verbosity 2 -meta rating.data.train.libfm.grp -out out.als.dim_100.ite_100.yes_grp.no_reg -rlog log.als.dim_100.ite_100.yes_grp.no_reg
+
+with no grouping but regularization 
+./libFM -task r -train rating.data.train.libfm -test rating.data.test.libfm -dim '1,1,100' -iter 100 -method als  -init_stdev 0.001 -verbosity 2 -regular '1,1,1' -out out.als.dim_100.ite_100.no_grp.yes_reg_1_1_1 -rlog log.als.dim_100.ite_100.no_grp.yes_reg_1_1_1
+
+with  grouping and regularization 
+./libFM -task r -train rating.data.train.libfm -test rating.data.test.libfm -dim '1,1,100' -iter 100 -method als  -init_stdev 0.001 -verbosity 2 -regular '1,1,1' -meta rating.data.train.libfm.grp -out out.als.dim_100.ite_100.yes_grp.yes_reg_1_1_1 -rlog log.als.dim_100.ite_100.yes_grp.yes_reg_1_1_1
