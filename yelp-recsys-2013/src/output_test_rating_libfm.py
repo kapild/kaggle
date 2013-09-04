@@ -6,12 +6,12 @@ from dao.BusinessManager import BusinessManager
 from algo.LibFMWithUserBusinessFeatures import LibFMWithUserBusinessFeatures
 
 bus_train_file = "../data/yelp_training_set_business.json"
-user_train_file =  "../data/yelp_training_set_user.json"
+user_train_file = "../data/yelp_training_set_user.json"
 
 review_data_file = "../data/final_test_set_review.json"
-rating_out_file = "../data/rating.data.test" 
+rating_out_file = "../data/rating.data.test"
 bus_test_file = "../data/final_test_set_business.json"
-user_test_file =  "../data/final_test_set_user.json"
+user_test_file = "../data/final_test_set_user.json"
 
 bus = BusinessManager(bus_train_file)
 user = UserManager(user_train_file)
@@ -29,11 +29,11 @@ model = LibFMWithUserBusinessFeatures(bus, user, bus_test, user_test)
 for line in f_bus:
     review_line = json.loads(line)
     item = Review(review_line)
-   
-    line =  model.get_output_line(item)
+
+    line = model.get_output_line(item)
     print line
     f_write.write(line)
-     
+
 f_bus.close()
 f_write.close()
 

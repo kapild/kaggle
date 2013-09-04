@@ -6,14 +6,13 @@ from sklearn.datasets.svmlight_format import dump_svmlight_file
 from sklearn.feature_extraction import DictVectorizer, FeatureHasher
 from sklearn.preprocessing  import normalize
 from sklearn import cross_validation, linear_model, pipeline
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer, TfidfVectorizer
 features_headers= [
     "ratings", 
     "user_id", 
     "business_id",
     "business_cat1",
     "business_cat2",
-    "business_cat3",
     'bus_avg_stars', 
     'user_avg_starts',
     'user_avg_review',
@@ -22,11 +21,25 @@ features_headers= [
     'bus_name',
 ]
 
+cat_headers = set()
+cat_headers.add('user_id')
+cat_headers.add('business_id')
+cat_headers.add('business_cat1')
+cat_headers.add('business_cat2')
+cat_headers.add('is_open')
+
+
 float_headers = set()
 float_headers.add('bus_avg_stars')
 float_headers.add('user_avg_starts')
 float_headers.add('user_avg_review')
 float_headers.add('bus_avg_review')
+
+
+text_headers = set()
+text_headers.add('bus_name')
+
+rating_header = 'ratings'
 
 delete_headers = set()
 delete_headers.add('ratings')
@@ -34,15 +47,23 @@ delete_headers.add('ratings')
 vectorizer = CountVectorizer()
 transformer = TfidfTransformer()
 
+#tdidf_transformer= TfidfVectorizer()
 #categorizer = vectorizer
 
 categorizer = pipeline.Pipeline(
     [('vectorizer', vectorizer), ('transformer', transformer),]
 )
 
-#categorizer.fit(titles, )
+#categorizer = pipeline.Pipeline(
+#    [('tfid', tdidf_transformer)]
+#)
 
-def load_file(file_name, data_rows, ratings):
+category_rows = []
+numeric_rows = []
+text_rows = []
+rating_rows  = []
+
+def load_file(file_name):
 
     print 'Openning CSV file'
     con = open(file_name, "r")
@@ -50,37 +71,36 @@ def load_file(file_name, data_rows, ratings):
     
     print 'Iterating over rows'
     count = 0
+    
     for row in data:
         if ( count % 100000 == 0):
             print count
         count+=1    
+        
+        cat_row = {}
+        num_row = []
+        text_row = {}
         for header in row.keys():
-            if header in float_headers:
-                row[header]= float(row[header])
-        ratings.append(float(row['ratings']))
-        for header in delete_headers:            
-            del row[header]            
-        data_rows.append(row)
-
-    return data_rows, ratings
+            if header in cat_headers:
+                cat_row[header] = row[header]
+            elif header in float_headers:
+                num_row.append(float(row[header]))
+            elif header in text_headers:
+                text_row[header] = row[header]
+        category_rows.append(cat_row)
+        numeric_rows.append(num_row)
+        text_rows.append(text_row)
+        rating_rows.append(float(row[rating_header]))
 
 def norm_float_headers(data):
-    count = 0
-    data_norm = []
-    for row in data:
-        data_row = {}
-        if ( count % 100000 == 0):
-            print count
-        count+=1    
-        for header in row.keys():
-            if header in float_headers:
-                data_row[header]= row[header]
-        data_norm.append(data_row)
 
-    final_norm = normalize(data_norm, axis=0)
+    import pdb
+    pdb.set_trace()
+
+    final_norm = normalize(data, axis=0)
     return final_norm
     
-def dump_group_names(feature_list, grp_out_file, y_shape):
+def dump_group_names(feature_list, dump_group_names, text_feat_name,  grp_out_file, y_shape, ):
 
     print 'dumping group names to'  + str(grp_out_file)    
     f_write = open(grp_out_file, "w")
@@ -100,13 +120,15 @@ def dump_group_names(feature_list, grp_out_file, y_shape):
             count+=1
             grp_features.add(feat_id)
         f_write.write(str(count) + "\n")
-        f_write_explain.write(str(index) + "\t" + str(count) + "\t"+ feat_id + "\t" + feat + "\n")
+        f_write_explain.write("index=" + str(index) + "\t" + "grp=" + str(count) + "\t"+ "feat_name=" + feat_id + "\t" + "feat=" + feat + "\n")
+        
         index+=1
     
     count+=1
+    assert y_shape == len(dump_group_names)
     for i in range(y_shape):
         f_write.write(str(count) + "\n")
-        f_write_explain.write(str(index) + "\t" + str(count) + "\t"+ feat_id + "\t" + feat + "\n")
+        f_write_explain.write("index=" + str(index) + "\t" + "grp=" + str(count) + "\t"+ "feat_name=" + text_feat_name + "\t" + "feat=" + dump_group_names[i].encode("utf-8") + "\n")
         index+=1
         
     f_write.close()
@@ -118,14 +140,15 @@ def extract_text_features(rows, feature_name):
     text_row = []
     for row in rows:
         text_row.append(row[feature_name])
-        del row[feature_name] 
     print 'done.. iterating ..'
     print ' Extarcting text features: ' + str(feature_name)
 
     text_feat_array = categorizer.fit_transform(text_row, )
     print '.. done .. Extarcting text features: ' + str(feature_name)
-
-    return text_feat_array
+    
+    import pdb
+    pdb.set_trace()
+    return text_feat_array, categorizer.steps[0][1].get_feature_names()
     
 if __name__ == '__main__':
     input_train_file = sys.argv[1]
@@ -134,41 +157,55 @@ if __name__ == '__main__':
     output_train_libsvm_file  = sys.argv[1] + ".libfm"
     output_test_libsvm_file  = sys.argv[2] + ".libfm"
     
-    data_rows = []
-    ratings = []
-    
-    data_rows, ratings = load_file(input_train_file, data_rows, ratings)
+    load_file(input_train_file)
     print 'done iterating %s file.', input_train_file
-    
-    len_train = len(data_rows)
-    
-    data_rows, ratings = load_file(input_test_file, data_rows, ratings)
+    len_train = len(rating_rows)
+
+    load_file(input_test_file)
     print 'done iterating %s file.', input_test_file
 
-    text_feat = extract_text_features(data_rows, 'bus_name')
+    import pdb
+    pdb.set_trace()        
 
-    x_shape, y_shape = text_feat.shape
-    #  v.transform
+    # text
+    X_0_text_feat_bus_name, feature_name_bus_name = extract_text_features(text_rows, 'bus_name')
+    x_shape, y_shape = X_0_text_feat_bus_name.shape
+    
+    import pdb
+    pdb.set_trace()        
+    
+    # numeric
+    X_1_norm_feat = norm_float_headers(numeric_rows)
+
+
+    # category
     vec = DictVectorizer()
     print 'Transforming to dict.'
-    X = vec.fit_transform(data_rows)
+    X_2_cat_feat = vec.fit_transform(category_rows)
     
-    from scipy.sparse import hstack
-    
-    Y_COO = hstack((X,text_feat))
-    Y = Y_COO.tocsr()
-
-    #print vec.get_feature_names()
-    print 'done.. Transforming to dict.'
     import pdb
-    pdb.set_trace()
-    dump_group_names(vec.get_feature_names(), output_train_libsvm_file + '.grp', y_shape)
+    pdb.set_trace()        
+
+    from scipy.sparse import hstack
+
+    
+    Y_temp = hstack((X_2_cat_feat,X_1_norm_feat))
+    Y_temp_2 = hstack((Y_temp,X_0_text_feat_bus_name))
+    Y = Y_temp_2.tocsr()
+
+    import pdb
+    pdb.set_trace()        
+
+    import pdb
+    pdb.set_trace()        
+
+    dump_group_names(vec.get_feature_names(), feature_name_bus_name, 'bus_name', output_train_libsvm_file + '.grp', y_shape, )
     
     print 'Dumping train in SVMLight.'
-    dump_svmlight_file(Y[0:len_train], ratings[0:len_train], output_train_libsvm_file )
+    dump_svmlight_file(Y[0:len_train], rating_rows[0:len_train], output_train_libsvm_file )
 
     print 'Dumping test in SVMLight.'
-    dump_svmlight_file(Y[len_train:], ratings[len_train:], output_test_libsvm_file )
+    dump_svmlight_file(Y[len_train:], rating_rows[len_train:], output_test_libsvm_file )
     
     print 'done... Dumping in SVMLight.'
 

@@ -28,15 +28,10 @@ class LibFMWithUserBusinessFeatures(BaseModel):
 		if len(bus_first_cat) == 1:
 			out_line +=  "," + str(bus_first_cat[0])
 			out_line +=  "," + str(bus_first_cat[0])
-			out_line +=  "," + str(bus_first_cat[0])
-		elif len(bus_first_cat) == 2:
-			out_line +=  "," + str(bus_first_cat[0])
-			out_line +=  "," + str(bus_first_cat[1])
-			out_line +=  "," + str(bus_first_cat[0])
 		else:
 			out_line +=  "," + str(bus_first_cat[0])
 			out_line +=  "," + str(bus_first_cat[1])
-			out_line +=  "," + str(bus_first_cat[2])
+
 		out_line +=  "," + self.precison(bus_avg_stars) 
 		out_line += "," + self.precison(user_avg_starts)
 		out_line += "," + self.precison(user_avg_review)
