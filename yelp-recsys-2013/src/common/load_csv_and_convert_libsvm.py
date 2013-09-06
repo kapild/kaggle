@@ -2,47 +2,72 @@ import sys
 import json
 import csv
 import numpy as np
-from sklearn.datasets.svmlight_format import dump_svmlight_file
+#from sklearn.datasets.svmlight_format import dump_svmlight_file
+from dump import dump_svmlight_file
 from sklearn.feature_extraction import DictVectorizer, FeatureHasher
 from sklearn.preprocessing  import normalize
 from sklearn import cross_validation, linear_model, pipeline
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer, TfidfVectorizer
-features_headers= [
-    "ratings", 
-    "user_id", 
-    "business_id",
-    "business_cat1",
-    "business_cat2",
-    'bus_avg_stars', 
+
+CATEGORIES = {
+    29: "Party",
+    33: "Class",
+    41: "Sports",
+}
+
+
+feat_list  = [
+    "ratings" ,
+    "user_id",
+    "business_id" ,
+#    "business_cat1",
+#    "business_cat2" : index + 1,,
+    'bus_avg_stars' , 
     'user_avg_starts',
-    'user_avg_review',
-    'bus_avg_review',
-    'is_open',
+#    'user_avg_review':,
+#    'bus_avg_review' :,
+#    'is_open' :,
     'bus_name',
-]
-
-cat_headers = set()
-cat_headers.add('user_id')
-cat_headers.add('business_id')
-cat_headers.add('business_cat1')
-cat_headers.add('business_cat2')
-cat_headers.add('is_open')
+] 
 
 
-float_headers = set()
-float_headers.add('bus_avg_stars')
-float_headers.add('user_avg_starts')
-float_headers.add('user_avg_review')
-float_headers.add('bus_avg_review')
+features_headers= {}
+
+for index, feat in enumerate(feat_list):
+    features_headers[feat] = index
 
 
-text_headers = set()
-text_headers.add('bus_name')
 
-rating_header = 'ratings'
+def add_features(dicti, feat):
+    if feat in features_headers:
+        print feat
+        dicti[features_headers[feat]] = 1
 
-delete_headers = set()
-delete_headers.add('ratings')
+cat_headers = {}
+add_features(cat_headers,'user_id')
+add_features(cat_headers,'business_id')
+add_features(cat_headers,'business_cat1')
+add_features(cat_headers,'business_cat2')
+add_features(cat_headers,'is_open')
+
+
+float_headers = {}
+add_features(float_headers,'bus_avg_stars')
+add_features(float_headers,'user_avg_starts')
+add_features(float_headers,'user_avg_review')
+add_features(float_headers,'bus_avg_review')
+
+
+text_headers = {}
+add_features(text_headers, 'bus_name')
+
+rating_header = 0
+
+delete_headers = {}
+add_features(delete_headers, 'ratings')
+
+rating_headers = {}
+add_features(rating_headers, 'ratings')
 
 vectorizer = CountVectorizer()
 transformer = TfidfTransformer()
@@ -66,31 +91,36 @@ rating_rows  = []
 def load_file(file_name):
 
     print 'Openning CSV file'
-    con = open(file_name, "r")
-    data = csv.DictReader(con, fieldnames=features_headers)
+#    con = open(file_name, "r")
+#    data = csv.DictReader(con, fieldnames=features_headers)
+    f = open(file_name)
+#    data = np.loadtxt(f,delimiter=',')
     
     print 'Iterating over rows'
     count = 0
     
-    for row in data:
+    for line in f:
         if ( count % 100000 == 0):
             print count
         count+=1    
         
-        cat_row = {}
+        cat_row = []
         num_row = []
-        text_row = {}
-        for header in row.keys():
-            if header in cat_headers:
-                cat_row[header] = row[header]
-            elif header in float_headers:
-                num_row.append(float(row[header]))
-            elif header in text_headers:
-                text_row[header] = row[header]
+        text_row = []
+        row = line.split(",")
+        len_y = len(row)
+        for index in range(len_y):
+            if index in cat_headers:
+                cat_row.append(row[index])
+            elif index in float_headers:
+                num_row.append(float(row[index]))
+            elif index in text_headers:
+                text_row.append(row[index])
         category_rows.append(cat_row)
         numeric_rows.append(num_row)
         text_rows.append(text_row)
-        rating_rows.append(float(row[rating_header]))
+        rating_rows.append(float(row[0]))
+
 
 def norm_float_headers(data):
 
@@ -168,20 +198,19 @@ if __name__ == '__main__':
     pdb.set_trace()        
 
     # text
-    X_0_text_feat_bus_name, feature_name_bus_name = extract_text_features(text_rows, 'bus_name')
+    X_0_text_feat_bus_name, feature_name_bus_name = extract_text_features(text_rows, 0)
     x_shape, y_shape = X_0_text_feat_bus_name.shape
-    
-    import pdb
-    pdb.set_trace()        
     
     # numeric
     X_1_norm_feat = norm_float_headers(numeric_rows)
 
 
-    # category
-    vec = DictVectorizer()
-    print 'Transforming to dict.'
+    vec = FeatureHasher(input_type='string', non_negative=True)
     X_2_cat_feat = vec.fit_transform(category_rows)
+    # category
+#    vec = DictVectorizer()
+    print 'Transforming to dict.'
+#    X_2_cat_feat = vec.fit_transform(category_rows)
     
     import pdb
     pdb.set_trace()        
@@ -199,7 +228,7 @@ if __name__ == '__main__':
     import pdb
     pdb.set_trace()        
 
-    dump_group_names(vec.get_feature_names(), feature_name_bus_name, 'bus_name', output_train_libsvm_file + '.grp', y_shape, )
+#    dump_group_names(vec.get_feature_names(), feature_name_bus_name, 'bus_name', output_train_libsvm_file + '.grp', y_shape, )
     
     print 'Dumping train in SVMLight.'
     dump_svmlight_file(Y[0:len_train], rating_rows[0:len_train], output_train_libsvm_file )
