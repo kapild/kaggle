@@ -20,6 +20,10 @@ f_bus = open(review_data_file)
 
 model = LibFMWithUserBusinessFeatures(bus, user, bus, user)
 
+output_header = model.get_feature_list()
+output_header_text = model.get_header_text(output_header)
+f_write.write(output_header_text + "\n")
+            
 for line in f_bus:
     review_line = json.loads(line)
     item = Review(review_line)

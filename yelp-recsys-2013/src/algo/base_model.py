@@ -1,3 +1,4 @@
+import string
 from string import lower
 class BaseModel(object):
 
@@ -22,7 +23,7 @@ class BaseModel(object):
 		else:
 			bus_avg_stars = BaseModel._get_business_train_avg_stars(bus, business_id)
 
-		return (bus_avg_stars)
+		return BaseModel.precison(bus_avg_stars)
 
 	@staticmethod
 	def _get_business_train_avg_stars(bus, business_id):
@@ -43,7 +44,7 @@ class BaseModel(object):
 				user_avg_stars = BaseModel._get_user_train_avg_stars(user, user_id)
 		else:
 			user_avg_stars = BaseModel._get_user_train_avg_stars(user, user_id)
-		return  (user_avg_stars)
+		return  BaseModel.precison(user_avg_stars)
 
 	@staticmethod
 	def _get_user_train_avg_stars(user, user_id):
@@ -64,7 +65,7 @@ class BaseModel(object):
 				user_avg_stars = BaseModel._get_user_train_avg_review(user, user_id)
 		else:
 			user_avg_stars = BaseModel._get_user_train_avg_review(user, user_id)
-		return (user_avg_stars)
+		return BaseModel.precison(user_avg_stars)
 
 	@staticmethod
 	def _get_user_train_avg_review(user, user_id):
@@ -87,7 +88,7 @@ class BaseModel(object):
 		else:
 			bus_avg_stars = BaseModel._get_business_train_avg_review_count(bus, business_id)
 
-		return bus_avg_stars
+		return BaseModel.precison(bus_avg_stars)
 
 	@staticmethod
 	def _get_business_train_avg_review_count(bus, business_id):
@@ -160,6 +161,20 @@ class BaseModel(object):
 	
 		return [default_cat]
 
+	def get_bus_city_text(self, bus, user, review_item, bus_test, user_test):
+
+		r_bus_id = review_item.business_id
+		try:
+		    return bus_test.get_bus_city_text(r_bus_id).encode("utf-8")
+		except KeyError:
+		    return bus.get_bus_city_text(r_bus_id).encode("utf-8")
+	
+	@staticmethod
+	def string_format( bus_name):
+		bus_name = string.replace(bus_name, "\'", "", 2)
+		bus_name = string.replace(bus_name, ",", " ", 2)
+		return (bus_name.encode("utf-8"))
+
 	@staticmethod
 	def get_bus_name(bus, user, review_item, bus_test, user_test):
 
@@ -170,14 +185,29 @@ class BaseModel(object):
 		else:
 			bus_name = BaseModel._get_bus_avg_name(bus, business_id)
 
-		return bus_name
+		return BaseModel.string_format(lower(bus_name))
 
 	@staticmethod
 	def _get_bus_avg_name(bus, business_id):
 		if bus.is_exists(business_id):
 			return bus.get_item_name(business_id)
 		else:
-			import pdb
-			pdb.set_trace()
 			return ''
 
+	def get_rating(self, bus, user, item, bus_test, user_test):
+
+		rating = 3.5
+		if item.stars:
+			rating = item.stars
+		
+		return str(rating)
+
+	def get_user_id(self, bus, user, item, bus_test, user_test):
+		return str(item.user_id)
+
+	def get_business_id(self, bus, user, item, bus_test, user_test):
+		return str(item.business_id)
+
+	@staticmethod
+	def precison(val):
+		return "%.2f" % (val)

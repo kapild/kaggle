@@ -18,6 +18,7 @@ features_headers= [
     'user_avg_review',
     'bus_avg_review',
     'is_open',
+    'bus_city',
     'bus_name',
 ]
 
@@ -27,6 +28,7 @@ cat_headers.add('business_id')
 cat_headers.add('business_cat1')
 cat_headers.add('business_cat2')
 cat_headers.add('is_open')
+cat_headers.add('bus_city')
 
 
 float_headers = set()
@@ -94,9 +96,6 @@ def load_file(file_name):
 
 def norm_float_headers(data):
 
-    import pdb
-    pdb.set_trace()
-
     final_norm = normalize(data, axis=0)
     return final_norm
     
@@ -146,8 +145,6 @@ def extract_text_features(rows, feature_name):
     text_feat_array = categorizer.fit_transform(text_row, )
     print '.. done .. Extarcting text features: ' + str(feature_name)
     
-    import pdb
-    pdb.set_trace()
     return text_feat_array, categorizer.steps[0][1].get_feature_names()
     
 if __name__ == '__main__':
@@ -164,16 +161,10 @@ if __name__ == '__main__':
     load_file(input_test_file)
     print 'done iterating %s file.', input_test_file
 
-    import pdb
-    pdb.set_trace()        
-
     # text
     X_0_text_feat_bus_name, feature_name_bus_name = extract_text_features(text_rows, 'bus_name')
     x_shape, y_shape = X_0_text_feat_bus_name.shape
-    
-    import pdb
-    pdb.set_trace()        
-    
+        
     # numeric
     X_1_norm_feat = norm_float_headers(numeric_rows)
 
@@ -183,8 +174,6 @@ if __name__ == '__main__':
     print 'Transforming to dict.'
     X_2_cat_feat = vec.fit_transform(category_rows)
     
-    import pdb
-    pdb.set_trace()        
 
     from scipy.sparse import hstack
 
@@ -192,12 +181,6 @@ if __name__ == '__main__':
     Y_temp = hstack((X_2_cat_feat,X_1_norm_feat))
     Y_temp_2 = hstack((Y_temp,X_0_text_feat_bus_name))
     Y = Y_temp_2.tocsr()
-
-    import pdb
-    pdb.set_trace()        
-
-    import pdb
-    pdb.set_trace()        
 
     dump_group_names(vec.get_feature_names(), feature_name_bus_name, 'bus_name', output_train_libsvm_file + '.grp', y_shape, )
     

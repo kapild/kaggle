@@ -117,6 +117,10 @@ class BusinessManager:
  	def get_all_item_keys(self):
  		return self.business_item_hash.keys()
 
+ 	def get_bus_city_text(self, id):
+ 		city_text = string.lower(self.get_item(id).city)
+ 		return city_text.split(" ")[0]
+
  	def get_max_cat_id(self):
  		return self.max_cat
 
