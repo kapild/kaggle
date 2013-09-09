@@ -24,11 +24,14 @@ output_header = model.get_feature_list()
 output_header_text = model.get_header_text(output_header)
 f_write.write(output_header_text + "\n")
             
+index = 0
 for line in f_bus:
     review_line = json.loads(line)
     item = Review(review_line)
     line =  model.get_output_line(item)
-    print line
+    index+=1
+    if(index % 1000 == 0):
+        print line
     f_write.write(line)
      
 f_bus.close()

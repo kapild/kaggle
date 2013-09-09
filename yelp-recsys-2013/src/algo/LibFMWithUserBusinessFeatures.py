@@ -18,7 +18,7 @@ class LibFMWithUserBusinessFeatures(BaseModel):
 			['user_avg_starts', self.get_user_avg_stars, True],
 			['user_avg_review', self.get_user_avg_review, True],
 			['bus_avg_review', self.get_business_review_count, True],
-			['bus_first_cat', self.get_category_feat_line, True],
+			['business_cat1,business_cat2', self.get_category_feat_line, True],
 			['bus_is_open', self.get_business_is_open, True],
 			['bus_name' , self.get_bus_name, True],
 			['city_text', self.get_bus_city_text, True],

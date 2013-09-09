@@ -8,18 +8,18 @@ from sklearn.preprocessing  import normalize
 from sklearn import cross_validation, linear_model, pipeline
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer, TfidfVectorizer
 features_headers= [
-    "ratings", 
+    "rating", 
     "user_id", 
     "business_id",
-    "business_cat1",
-    "business_cat2",
     'bus_avg_stars', 
     'user_avg_starts',
     'user_avg_review',
     'bus_avg_review',
-    'is_open',
-    'bus_city',
+    "business_cat1",
+    "business_cat2",
+    'bus_is_open',
     'bus_name',
+    'city_text',
 ]
 
 cat_headers = set()
@@ -41,10 +41,10 @@ float_headers.add('bus_avg_review')
 text_headers = set()
 text_headers.add('bus_name')
 
-rating_header = 'ratings'
+rating_header = 'rating'
 
 delete_headers = set()
-delete_headers.add('ratings')
+delete_headers.add('rating')
 
 vectorizer = CountVectorizer()
 transformer = TfidfTransformer()
@@ -69,10 +69,12 @@ def load_file(file_name):
 
     print 'Openning CSV file'
     con = open(file_name, "r")
-    data = csv.DictReader(con, fieldnames=features_headers)
+#    data = csv.DictReader(con, fieldnames=features_headers)
+    data = csv.DictReader(con)
     
     print 'Iterating over rows'
     count = 0
+    
     
     for row in data:
         if ( count % 100000 == 0):
