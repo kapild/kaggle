@@ -16,6 +16,10 @@ class User:
 		self.review_count =  self.data(json,'review_count', 1)
 		self.average_stars =  self.data(json,'average_stars', 1)
 		self.votes =  self.data(json,'votes')
+		if( self.votes):
+			self.funny  = self.votes['funny']
+			self.useful  = self.votes['useful']
+			self.cool  = self.votes['cool']
 
 	def data(self, json, key, is_int=0):
 		if key in json:

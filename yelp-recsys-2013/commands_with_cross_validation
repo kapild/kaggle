@@ -47,9 +47,9 @@ too slow
 
 
 
-
-
-
+--------------------------------------------------------
+./libFM -task r -train rating.data.train.libfm -test rating.data.test.libfm -dim '1,1,20' -iter 1000 -method mcmc  -init_stdev 0.01 -verbosity 2 -out out.mcmc.dim_20.iter_1000.no_
+------------------------------------------------
 
 
 

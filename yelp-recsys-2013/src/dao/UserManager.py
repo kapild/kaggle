@@ -12,6 +12,9 @@ class UserManager:
 		self.count = 0
 		self.total_rating_count = 0
 		self.total_review_count = 0
+		self.total_funny = 0
+		self.total_cool = 0
+		self.total_useful = 0
 		self.load_user_data(self.user_file)
 
 
@@ -32,6 +35,11 @@ class UserManager:
  			stars = user_item.average_stars
  			total_stars+=stars
  			total_review+= user_item.review_count
+ 			if user_item.votes:
+				self.total_funny += user_item.funny
+				self.total_cool += user_item.cool
+				self.total_useful += user_item.useful
+
  			count+=1
  			print_debug("Reading record user_id: " + str(user_item.user_id), DEBUG_INT)
 
@@ -62,6 +70,24 @@ class UserManager:
  	def get_user_review_count(self, id):
  		return self.get_item(id).review_count
 
+ 	def get_user_funny(self, id):
+ 		return self.get_item(id).funny
+
+ 	def get_user_cool(self, id):
+ 		return self.get_item(id).cool
+ 	
+ 	def get_user_useful(self, id):
+ 		return self.get_item(id).useful
+
+ 	def get_avg_user_funny(self):
+ 	 	return float(self.total_funny)/self.count
+ 	
+ 	def get_avg_user_cool(self):
+ 	 	return float(self.total_cool)/self.count
+ 	
+ 	def get_avg_user_useful(self):
+ 		return float(self.total_useful)/self.count
+		
  	def pickle(self,):
 		with open("../data/user_manager.pkl", 'w') as f:
 			pickle.dump(self.data, f)

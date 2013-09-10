@@ -209,5 +209,76 @@ class BaseModel(object):
 		return str(item.business_id)
 
 	@staticmethod
+	def get_user_cool(bus, user, review_item, bus_test, user_test):
+
+		user_id = review_item.user_id
+		# is in test data, which is train for train
+		if user_test.is_exists(user_id):
+			try:
+				bus_avg_stars = user_test.get_user_cool(user_id)
+			except AttributeError:
+				bus_avg_stars = BaseModel._get_user_avg_cool(user, user_id)
+		else:
+			bus_avg_stars = BaseModel._get_user_avg_cool(user, user_id)
+
+		return BaseModel.precison(bus_avg_stars)
+
+	@staticmethod
+	def _get_user_avg_cool(user, user_id):
+		if user.is_exists(user):
+			bus_avg_stars = user.get_user_cool(user_id)
+		else:
+			bus_avg_stars = user.get_avg_user_cool()
+		return bus_avg_stars
+
+
+	@staticmethod
+	def get_user_funny(bus, user, review_item, bus_test, user_test):
+
+		user_id = review_item.user_id
+		# is in test data, which is train for train
+		if user_test.is_exists(user_id):
+			try:
+				bus_avg_stars = user_test.get_user_funny(user_id)
+			except AttributeError:
+				bus_avg_stars = BaseModel._get_user_avg_funny(user, user_id)
+		else:
+			bus_avg_stars = BaseModel._get_user_avg_funny(user, user_id)
+
+		return BaseModel.precison(bus_avg_stars)
+
+	@staticmethod
+	def _get_user_avg_funny(user, user_id):
+		if user.is_exists(user):
+			bus_avg_stars = user.get_user_funny(user_id)
+		else:
+			bus_avg_stars = user.get_avg_user_funny()
+		return bus_avg_stars
+
+	@staticmethod
+	def get_user_useful(bus, user, review_item, bus_test, user_test):
+
+		user_id = review_item.user_id
+		# is in test data, which is train for train
+		if user_test.is_exists(user_id):
+			try:
+				bus_avg_stars = user_test.get_user_useful(user_id)
+			except AttributeError:
+				bus_avg_stars = BaseModel._get_user_avg_useful(user, user_id)
+			
+		else:
+			bus_avg_stars = BaseModel._get_user_avg_useful(user, user_id)
+
+		return BaseModel.precison(bus_avg_stars)
+
+	@staticmethod
+	def _get_user_avg_useful(user, user_id):
+		if user.is_exists(user):
+			bus_avg_stars = user.get_user_useful(user_id)
+		else:
+			bus_avg_stars = user.get_avg_user_useful()
+		return bus_avg_stars
+
+	@staticmethod
 	def precison(val):
 		return "%.2f" % (val)
