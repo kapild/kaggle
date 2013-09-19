@@ -6,3 +6,5 @@ stumble-evergreen/data/
 stumble-evergreen/submit/
 stumble-evergreen/src/submit
 stumble-evergreen/src/val
+*.pyc
+*.libfm
