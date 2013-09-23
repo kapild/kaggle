@@ -17,6 +17,8 @@ loadData = lambda f: np.genfromtxt(open(f,'r'), delimiter=' ')
 def main():
 
   print "loading data.."
+  import pdb
+  pdb.set_trace()
   traindata = list(np.array(p.read_table('../data/train.tsv'))[:,2])
   testdata = list(np.array(p.read_table('../data/test.tsv'))[:,2])
   y = np.array(p.read_table('../data/train.tsv'))[:,-1]

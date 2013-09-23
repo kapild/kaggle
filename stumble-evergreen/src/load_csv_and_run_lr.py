@@ -14,10 +14,19 @@ import sklearn.linear_model as lm
 from sklearn import svm
 from sklearn import metrics,preprocessing,cross_validation
 import pandas as p
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.naive_bayes import MultinomialNB
+
 from common.utils import FILE_SEPERATOR 
 cat_headers = set()
 cat_headers.add('urlid')
 cat_headers.add('alchemy_category')
+cat_headers.add('news_front_page')
+cat_headers.add('frameBased')
+cat_headers.add('alchemy_category')
+cat_headers.add('is_news')
+cat_headers.add('hasDomainLink')
+cat_headers.add('lengthyLinkDomain')
 
 
 float_headers = set()
@@ -38,11 +47,13 @@ delete_headers = set()
 delete_headers.add('label')
 
 vectorizer = CountVectorizer()
-transformer = TfidfTransformer()
+transformer = TfidfVectorizer(min_df=3,  max_features=None, strip_accents='unicode',  
+      analyzer='word',token_pattern=r'\w{1,}',ngram_range=(1, 2), use_idf=1,smooth_idf=1,sublinear_tf=1, norm='l2')
 
 categorizer = pipeline.Pipeline(
-    [('vectorizer', vectorizer), ('transformer', transformer),]
+    [ ('transformer', transformer),]
 )
+
 
 rd = lm.LogisticRegression(penalty='l2', dual=True, tol=0.0001, 
                              C=1, fit_intercept=True, intercept_scaling=1.0, 
@@ -52,10 +63,13 @@ rd = lm.LogisticRegression(penalty='l2', dual=True, tol=0.0001,
 my_svm =svm.LinearSVC(penalty='l2', loss='l2', )
 
 
+#rf = RandomForestRegressor(n_estimators=1000,verbose=2,n_jobs=20,min_samples_split=5,random_state=1034324)
 
+naive = MultinomialNB(alpha=0.5)
 trainer  = [ 
     ['lr' , rd],
-    ['svm' , my_svm] 
+    ['svm' , my_svm],
+    ['naive', naive], 
 ]
 category_rows = []
 numeric_rows = []
@@ -77,11 +91,7 @@ def load_file(file_name):
     
     for row in data:
         local_float_header_list  = [] 
-        
-        if ( count % 100000 == 0):
-            print count
         count+=1    
-        
         cat_row = {}
         num_row = []
         text_row = {}
@@ -110,53 +120,6 @@ def norm_float_headers(data):
     final_norm = normalize(data, axis=0)
     return final_norm
     
-#dump_group_names(vec.get_feature_names(), feature_name_bus_name, 'bus_name', output_train_libsvm_file + '.grp', y_shape, )
-    
-def dump_group_names(cat_feature_list, text_feature_list, text_feat_name,  numeric_feature_list, grp_out_file, y_shape, ):
-
-    print 'dumping group names to'  + str(grp_out_file)    
-    f_write = open(grp_out_file, "w")
-    f_write_explain = open(grp_out_file + ".explain", "w")
-    f_write_grpby = open(grp_out_file + ".explain.grpby", "w")
-    
-    grp_features = set()
-    count= -1
-    
-    index = 0
-    for feat in cat_feature_list:
-        tokens = feat.split('=')
-        if(len(tokens) >= 2):
-            feat_id = tokens[0]
-        else:
-            feat_id = feat
-        if not feat_id in grp_features:
-            count+=1
-            grp_features.add(feat_id)
-            f_write_grpby.write("start_index=" + str(index) + "\t"  + " group=" + str(feat_id) + "\n")            
-        f_write.write(str(count) + "\n")
-        f_write_explain.write("index=" + str(index) + "\t" + "grp=" + str(count) + "\t"+ "feat_name=" + feat_id + "\t" + "feat=" + feat + "\n")
-        index+=1
-    
-
-    for i in range(len(numeric_feature_list)):
-        count+=1
-        f_write.write(str(count) + "\n")
-        f_write_explain.write("index=" + str(index) + "\t" + "grp=" + str(count) + "\t"+ "feat_name=" + numeric_feature_list[i] + "\t" + "feat=numeric"  + "\n")
-        f_write_grpby.write("start_index=" + str(index) + "\t"  + " group=" + str(numeric_feature_list[i]) + "\n")            
-        index+=1
-    
-    count+=1
-    assert y_shape == len(text_feature_list)
-    f_write_grpby.write("start_index=" + str(index) + "\t"  + " group=" + str(text_feat_name) + "\n")            
-    for i in range(y_shape):
-        f_write.write(str(count) + "\n")
-        f_write_explain.write("index=" + str(index) + "\t" + "grp=" + str(count) + "\t"+ "feat_name=" + text_feat_name + "\t" + "feat=" + text_feature_list[i].encode("utf-8") + "\n")
-        index+=1
-    
-    f_write.close()
-    f_write_explain.close()
-    print '..done.. dumping group names to'  + str(grp_out_file)    
- 
 def load_train_features(pkl_filename):
     pkl_filename = "./data/" + pkl_filename
     print 'trying to load pickle data from: ' + pkl_filename
@@ -174,11 +137,18 @@ def save_train_features(data, pkl_filename):
     print 'done saving.'
     pkl_file.close()
  
-def extract_text_features(rows, feature_name):
+def extract_text_features(rows, feature_name, headers):
     print 'Extracting text features: ' + str(feature_name)
     text_row = []
+    
     for row in rows:
-        text_row.append(row[feature_name])
+        if headers:
+            for key in headers:
+                dict_row = json.loads(row[feature_name])
+                if( key in dict_row and dict_row[key] is not None):
+                    text_row.append(dict_row[key])
+        else:
+            text_row.append(row[feature_name])
 
     text_feat_array = categorizer.fit_transform(text_row, )
     print 'done ..'
@@ -187,13 +157,21 @@ def extract_text_features(rows, feature_name):
 def save_methods_accuracy_score(mode, method, score):
 
     with open("./scores/" + "methods." + mode + ".score", "a") as myfile:
-        myfile.write(method + ",%.2f" % (score) + "\n")
+        myfile.write(method + ",%.4f" % (score) + "\n")
 
 def save_best_accuracy_score(file_name, mode, method, score):
 
     with open("./scores/" + file_name  + ".score", "a") as myfile:
-        myfile.write(mode + "," + method + ",%.2f" % (score) + "\n")
+        myfile.write(mode + "," + method + ",%.4f" % (score) + "\n")
         
+def get_text_feature(text_rows, text_field):       
+    feature_list = None
+    feature_name_list = None
+    if (len(text_rows) > 0):
+        feature_list, feature_name_list = extract_text_features(text_rows, text_field, ['body', 'title'])
+
+    return feature_list, feature_name_list
+
 def run_pickle_data(input_train_file, input_test_file):
 
     print 'running pickle data'
@@ -203,22 +181,48 @@ def run_pickle_data(input_train_file, input_test_file):
     load_file(input_test_file)
     print 'done iterating %s file.', input_test_file
 
-#    X_1_norm_feat = norm_float_headers(numeric_rows)
-    X_1_norm_feat = numeric_rows
+    X_1_norm_feat = []
+    if len(numeric_rows) > 0:
+        X_1_norm_feat = norm_float_headers(numeric_rows)
+#    X_1_norm_feat = numeric_rows
 
-    y_all = np.array(rating_rows)
-    X_0_text_feat_bus_name, feature_name_bus_name = extract_text_features(text_rows, 'boilerplate')
-
-    from scipy.sparse import hstack
     import pdb
     pdb.set_trace()
-    if (len(X_1_norm_feat) > 0 and  X_0_text_feat_bus_name.shape[0] > 0):
-        X_all = hstack((X_1_norm_feat, X_0_text_feat_bus_name))
+    # category
+    X_2_cat_feat = None
+    if(len(category_rows) > 0 ):
+        vec = DictVectorizer()
+        print 'Transforming to dict.'
+        X_2_cat_feat = vec.fit_transform(category_rows)
+
+    y_all = np.array(rating_rows)
+
+    import pdb
+    pdb.set_trace()    
+    text_feats, text_feat_vocab = get_text_feature(text_rows, 'boilerplate')
+
+    import pdb
+    pdb.set_trace()    
+    
+    from scipy.sparse import hstack
+    if (len(X_1_norm_feat) > 0 and len(text_rows) > 0 and len(category_rows) > 0):
+        X_all = hstack((X_1_norm_feat, text_feats)) 
+        X_all = hstack((X_all, X_2_cat_feat)).tocsr() 
+
     else:
-        if len(X_1_norm_feat) > 0:
-            X_all = X_1_norm_feat
-        else:
-            X_all = X_0_text_feat_bus_name
+        if len(X_1_norm_feat) > 0 and len(text_rows) > 0:
+            X_all = hstack((X_1_norm_feat, text_feats)).tocsr() 
+        elif len(X_1_norm_feat) > 0 and len(category_rows) > 0:
+            X_all = hstack((X_1_norm_feat, X_2_cat_feat)).tocsr() 
+        elif len(text_rows) > 0 and len(category_rows) > 0:
+            X_all = hstack((text_feats, X_2_cat_feat)).tocsr() 
+        elif len(text_rows) > 0:
+            X_all = text_feats 
+        elif len(category_rows) > 0:
+            X_all = X_2_cat_feat 
+        elif len(X_1_norm_feat) > 0:
+            X_all = X_1_norm_feat 
+            
 
     dump_data = { 'x' : X_all,
                    'y' : y_all,
@@ -249,9 +253,13 @@ if __name__ == '__main__':
         print 'error loading pickle data.'
         dump_data = run_pickle_data(input_train_file, input_test_file)
         save_train_features(dump_data, exp_type  + '.data.pickle')
-        
+
+    print 'input file train:' + input_train_file 
+    print 'input file test:' + input_test_file 
+
+    raw_input('Press enter:')
     
-    X_all = dump_data['x'].tocsr() 
+    X_all = dump_data['x']
     y_all = dump_data['y']
     len_train = dump_data['train_len']
     X_train = X_all[:len_train]
@@ -272,19 +280,21 @@ if __name__ == '__main__':
             best_method_name = name 
             print 'best method:' + name
     
+    import pdb
+    pdb.set_trace()
     save_best_accuracy_score("best_cv_score", exp_type, best_method_name, best_score)        
     best_method.fit(X_train,y_train)
 
     X_test = X_all[len_train:]
-    pred = best_method.predict_proba(X_test)[:,1]
+    pred = best_method.predict_proba(X_test)
 
     print 'Dumping train in SVMLight.'
-    dump_svmlight_file(X_train, y_train, output_train_libsvm_file )
+#    dump_svmlight_file(X_train, y_train, output_train_libsvm_file )
 
     print 'Dumping test in SVMLight.'
-    dump_svmlight_file(X_test, pred, output_test_libsvm_file )
+#    dump_svmlight_file(X_test, pred, output_test_libsvm_file )
  
     testfile = p.read_csv('../data/test.tsv', sep="\t", na_values=['?'], index_col=1)
     pred_df = p.DataFrame(pred, index=testfile.index, columns=['label'])
-    pred_df.to_csv(exp_type + 'benchmark.csv')
+    pred_df.to_csv("results/" + exp_type + 'benchmark.csv')
     print "submission file created.."

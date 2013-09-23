@@ -14,14 +14,20 @@ class LibFMFeatures(BaseModel):
 
 		feat_head = [
 			['label', self.get_label, True],
-#			['urlid', self.get_url_id, True],
-#			['alchemy_category', self.get_alchemy_category, True],
-#			['alchemy_category_score', self.get_alchemy_category_score, True],
-#			['avglinksize', self.get_avglinksize, True],
-#			['commonlinkratio_1', self.get_commonlinkratio_1, True],
-#			['commonlinkratio_2', self.get_commonlinkratio_2, True],
-#			['commonlinkratio_3', self.get_commonlinkratio_3, True],
-#			['commonlinkratio_4', self.get_commonlinkratio_4, True],
+			['urlid', self.get_url_id, True],
+			['alchemy_category', self.get_alchemy_category, True],
+			['alchemy_category_score', self.get_alchemy_category_score, True],
+			['avglinksize', self.get_avglinksize, True],
+			['commonlinkratio_1', self.get_commonlinkratio_1, True],
+			['commonlinkratio_2', self.get_commonlinkratio_2, True],
+			['commonlinkratio_3', self.get_commonlinkratio_3, True],
+			['commonlinkratio_4', self.get_commonlinkratio_4, True],
+			['news_front_page', self.get_news_front_page, True], 
+			['frameBased', self.get_frameBased, True],
+			['is_news', self.get_is_news, True],
+			['hasDomainLink', self.get_hasDomainLink, True],
+			['lengthyLinkDomain', self.get_lengthyLinkDomain, True],
+			
 			['boilerplate', self.get_boilerplate, True],
 
 		]

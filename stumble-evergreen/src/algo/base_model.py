@@ -27,6 +27,27 @@ class BaseModel(object):
 	@staticmethod
 	def get_alchemy_category(page, page_test, page_item):
 		return BaseModel.none_comma(page_item.alchemy_category)
+
+	@staticmethod
+	def get_news_front_page(page, page_test, page_item):
+		return BaseModel.none_comma(page_item.news_front_page)
+
+	@staticmethod
+	def get_frameBased(page, page_test, page_item):
+		return BaseModel.none_comma(page_item.frameBased)
+
+	@staticmethod
+	def get_is_news(page, page_test, page_item):
+		return BaseModel.none_comma(page_item.is_news)
+
+	@staticmethod
+	def get_hasDomainLink(page, page_test, page_item):
+		return BaseModel.none_comma(page_item.hasDomainLink)
+
+	@staticmethod
+	def get_lengthyLinkDomain(page, page_test, page_item):
+		return BaseModel.none_comma(page_item.lengthyLinkDomain)
+
 	
 	def get_alchemy_category_score(self, page, page_test, page_item):
 		if page.is_exists(page_item.urlid) and page_item.alchemy_category_score is not None:
