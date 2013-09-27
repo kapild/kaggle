@@ -9,7 +9,6 @@ from sklearn import metrics,preprocessing,cross_validation
 from sklearn.feature_extraction.text import TfidfVectorizer
 import sklearn.linear_model as lm
 import pandas as p
-from sklearn.datasets.svmlight_format import dump_svmlight_file
 
 
 loadData = lambda f: np.genfromtxt(open(f,'r'), delimiter=' ')
@@ -31,7 +30,6 @@ def main():
   X_all = traindata + testdata
   lentrain = len(traindata)
 
-
   print "fitting pipeline"
   tfv.fit(X_all)
   print "transforming data"
@@ -40,13 +38,7 @@ def main():
   X = X_all[:lentrain]
   X_test = X_all[lentrain:]
 
-  import pdb
-  pdb.set_trace()
-
-  print "20 Fold CV Score: ", np.mean(cross_validation.cross_val_score(rd, X, y, cv=20))
-
-  print 'Dumping train in SVMLight.'
-  dump_svmlight_file(X, y, 'beat_train.libfm' )
+  print "20 Fold CV Score: ", np.mean(cross_validation.cross_val_score(rd, X, y, cv=20, scoring='roc_auc'))
 
   print "training on full data"
   rd.fit(X,y)

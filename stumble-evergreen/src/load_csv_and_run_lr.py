@@ -210,8 +210,6 @@ def run_pickle_data(input_train_file, input_test_file):
     X_0_text_feat_bus_name, feature_name_bus_name = extract_text_features(text_rows, 'boilerplate')
 
     from scipy.sparse import hstack
-    import pdb
-    pdb.set_trace()
     if (len(X_1_norm_feat) > 0 and  X_0_text_feat_bus_name.shape[0] > 0):
         X_all = hstack((X_1_norm_feat, X_0_text_feat_bus_name))
     else:
@@ -276,13 +274,14 @@ if __name__ == '__main__':
     best_method.fit(X_train,y_train)
 
     X_test = X_all[len_train:]
-    pred = best_method.predict_proba(X_test)[:,1]
+    pred = best_method.predict(X_test)
+#    pred = best_method.predict(X_test)[:,1]
 
     print 'Dumping train in SVMLight.'
-    dump_svmlight_file(X_train, y_train, output_train_libsvm_file )
+#    dump_svmlight_file(X_train, y_train, output_train_libsvm_file )
 
     print 'Dumping test in SVMLight.'
-    dump_svmlight_file(X_test, pred, output_test_libsvm_file )
+#    dump_svmlight_file(X_test, pred, output_test_libsvm_file )
  
     testfile = p.read_csv('../data/test.tsv', sep="\t", na_values=['?'], index_col=1)
     pred_df = p.DataFrame(pred, index=testfile.index, columns=['label'])
