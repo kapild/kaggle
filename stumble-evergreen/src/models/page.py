@@ -1,12 +1,3 @@
-# {
-#   'type': 'user',
-#   'user_id': (encrypted user id),
-#   'name': (first name),
-#   'review_count': (review count),
-#   'average_stars': (floating point average, like 4.31),
-#   'votes': {'useful': (count), 'funny': (count), 'cool': (count)}
-# }
-from decimal import *
 class Page:
 
 	def __init__(self, dict):

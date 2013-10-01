@@ -1,96 +1,92 @@
 import json
 import csv
-from models.page import Page
+import numpy as np
+import pandas as pd
+from common.preprocess import  preprocess_pipeline
 
+# helper class for Panda related objects
 class PageManager:
 
 	def __init__(self, page_file):
 
 		self.page_file = page_file
-		self.page_item_hash = {}
-		self.field_value_sum = {}
-		self.page_item_list = []
-		self.cat_score_sum = 0.0
-		self.avglinksize_sum = 0.0
-		self.commonlinkratio_1_sum  = 0.0
-		self.commonlinkratio_2_sum  = 0.0
-		self.commonlinkratio_3_sum  = 0.0
-		self.commonlinkratio_4_sum  = 0.0
-		self.count = 0
-		self.load_page_data(self.page_file)
-
+		self.panda_data = self.load_page_data(self.page_file)
 
 	def load_page_data(self, page_file):
 
-		page_item_hash = {}
-		page_item_list = []
-		con = open(page_file, "r")
-		data = csv.DictReader(con, delimiter="\t")
-
-
- 		count = 0
- 		for row in data:
- 			page_item = Page(row)
- 			page_item_hash[page_item.urlid] = page_item
- 			page_item_list.append(page_item.urlid)
- 			if page_item.alchemy_category_score:
- 				self.cat_score_sum+=page_item.alchemy_category_score
- 			if page_item.avglinksize:
- 				self.avglinksize_sum+=page_item.avglinksize
- 			if page_item.commonLinkRatio_1:
- 				self.commonlinkratio_1_sum+=page_item.commonLinkRatio_1
- 			if page_item.commonLinkRatio_2:
- 				self.commonlinkratio_2_sum+=page_item.commonLinkRatio_2
- 			if page_item.commonLinkRatio_3:
- 				self.commonlinkratio_3_sum+=page_item.commonLinkRatio_3
- 			if page_item.commonLinkRatio_4:
- 				self.commonlinkratio_4_sum+=page_item.commonLinkRatio_4
- 			
-# 			for key in row.keys():
-#	 			if page_item.compression_ratio:
-#	 				self.add_val_to_hash(self.field_value_sum, compression_ratio, page_item.compression_ratio)
- 				
- 			count+=1
-
- 		self.page_item_list = page_item_list
- 		self.page_item_hash = page_item_hash
- 		self.count = count
-
- 	def add_val_to_hash(self, hash_key, field, new_val):
- 		val = 0
- 		if field in hash_key:
- 			val = hash_key.field
- 	 	hash_key.field = val + new_val
- 	 	
- 	def get_avg_alchemy_category_score(self):
- 		return float(self.cat_score_sum)/self.count
-
- 	def get_avg_avglinksize(self):
- 		return float(self.avglinksize_sum)/self.count
-
- 	def get_avg_commonlinkratio_1(self):
- 		return float(self.commonlinkratio_1_sum)/self.count
-
- 	def get_avg_commonlinkratio_2(self):
- 		return float(self.commonlinkratio_2_sum)/self.count
-
- 	def get_avg_commonlinkratio_3(self):
- 		return float(self.commonlinkratio_3_sum)/self.count
-
- 	def get_avg_commonlinkratio_4(self):
- 		return float(self.commonlinkratio_4_sum)/self.count
- 	
- 	def get_page_id_list(self):
- 		return self.page_item_list
- 	
-# 	def get_avg_value(self, field):
-# 		return self.
+		data = pd.read_csv(
+			page_file, 
+			sep='\t',
+			index_col=None,
+			na_values=['?'],
+			dtype={	
+				'url' : np.str_, 
+				'urlid' : np.str_,
+				'non_markup_alphanum_characters' : 'int8',
+				'numberOfLinks' : 'int8',
+				'boilerplate' : np.str_, 
+				'alchemy_category' : np.str_, 
+				'framebased' : np.str_, 
+				'hasDomainLink' : np.str_, 
+				'is_news' : np.str_, 
+				'lengthyLinkDomain' : np.str_, 
+				'news_front_page' : np.str_, 
+				'label' : np.float64, 
+				'alchemy_category_score' : np.float64, 
+				'avglinksize' : np.float64, 
+				'commonlinkratio_1' : np.float64, 
+				'commonlinkratio_2' : np.float64, 
+				'commonlinkratio_3' : np.float64, 
+				'commonlinkratio_4' : np.float64, 
+				'compression_ratio' : np.float64, 
+				'embed_ratio' : np.float64, 
+				'frameTagRatio' : np.float64, 
+				'html_ratio' : np.float64, 
+				'linkwordscore' : np.float64, 
+				'numwords_in_url' : np.float64, 
+				'parametrizedLinkRatio' : np.float64, 
+				'spelling_errors_ratio' : np.float64, 
+				'image_ratio' : np.float64,
+			},
+#			index_col='urlid',
+		)
+#		data = PageManager.convert(data, 'boilerplate')
+		return data
 
  	def get_item(self, id):
- 		return self.page_item_hash[id] 		 		
-
+ 	 raise NotImplementedError
+ 	
  	def get_all_item_keys(self):
- 		return self.page_item_hash.keys()
-
+ 	 raise NotImplementedError 	
+ 	
  	def is_exists(self, id):
- 		return id in self.page_item_hash
+ 	 raise NotImplementedError
+
+	@staticmethod
+	def pre_process_text( text):
+		return preprocess_pipeline(text, "english", "PorterStemmer", True, False, False)
+#		return preprocess_pipeline(observation, "english", "WordNetLemmatizer", True, False, False)
+	@staticmethod
+	def convert(X, key):
+
+		if  key not in X:
+			return
+		
+		x_old = X[key]		
+
+		rows = []		
+		for index in x_old.index:
+			item = x_old[index]
+			new_dict = json.loads(item)
+			if isinstance(new_dict, dict):
+				item_dict  = dict()
+				for subkey, subvalue in new_dict.items():
+					process_val = subvalue
+					if subvalue is not None:
+						process_val = PageManager.pre_process_text(subvalue)
+					item_dict['%s_%s' % (key, subkey)] = process_val
+				rows.append(item_dict)
+		new_data = pd.DataFrame(rows)
+		del X[key]
+		X = pd.concat([X, new_data], axis=1)
+		return X
